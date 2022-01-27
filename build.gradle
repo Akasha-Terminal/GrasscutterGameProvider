@@ -1,0 +1,48 @@
+plugins {
+	id 'java-library'
+	id 'eclipse'
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		url "https://repo.spongepowered.org/maven/"
+	}
+	maven {
+		url "https://maven.fabricmc.net/"
+	}
+}
+
+sourceCompatibility = '16'
+targetCompatibility = '16'
+
+version = providerVersion
+group = "io.github.pseudodistant"
+archivesBaseName = "provider"
+
+dependencies {
+
+	compileOnly group: 'org.jetbrains', name: 'intellij-fernflower', version: '1.2.1.16'
+	compileOnly group: 'net.fabricmc', name: 'fabric-loader', version: '0.12.12'
+
+	//mixin requirements:
+	compileOnly 'org.spongepowered:mixin:' + mixinVersion
+	compileOnly 'com.google.guava:guava:21.0'
+	compileOnly group: 'com.google.code.gson', name: 'gson', version: '2.8.7'
+	compileOnly group: 'org.ow2.asm', name: 'asm', version: asmVersion
+	compileOnly group: 'org.ow2.asm', name: 'asm-analysis', version: asmVersion
+	compileOnly group: 'org.ow2.asm', name: 'asm-commons', version: asmVersion
+	compileOnly group: 'org.ow2.asm', name: 'asm-tree', version: asmVersion
+	compileOnly group: 'org.ow2.asm', name: 'asm-util', version: asmVersion
+
+}
+
+jar {
+	manifest {
+		attributes(
+			'Class-Path': configurations.runtimeClasspath.collect { it.getName() }.join(' '),
+			'Specification-Version': 8.0,
+			'Multi-Release': 'true'
+		)
+	}
+}

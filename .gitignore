@@ -1,0 +1,30 @@
+# eclipse
+bin
+*.launch
+.metadata
+.classpath
+.project
+.settings
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+#JVM
+hs_err_pid*.log
+
+# secrets
+**.secret
+
+#ModLauncher
+logs/*
+
+#WilderForge
+crashes/*
