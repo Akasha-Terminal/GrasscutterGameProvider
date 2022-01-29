@@ -4,6 +4,8 @@ plugins {
 	id 'eclipse'
 }
 
+def ENV = System.getenv()
+
 repositories {
 	mavenCentral()
 	maven {
@@ -41,6 +43,10 @@ dependencies {
 
 }
 
+java {
+	withSourcesJar()
+}
+
 jar {
 	manifest {
 		attributes(
@@ -50,3 +56,45 @@ jar {
 		)
 	}
 }
+
+sourceSets {
+	main {
+		java {
+			srcDir 'src'
+		}
+	}
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifact(jar)
+			artifact(sourcesJar)
+			pom.withXml {
+				subprojects.each {
+					if (it.name != project.testmods_project) {
+						depNode.appendNode("groupId", it.group)
+						depNode.appendNode("artifactId", it.name)
+						depNode.appendNode("version", it.version)
+						depNode.appendNode("scope", "compile")
+					}
+				}
+			}
+		}
+	}
+	repositories {
+		if (ENV.MAVEN_PUBLISH_TOKEN) {
+			maven {
+				url 'https://maven.rewovenmc.tk/'
+				credentials {
+					username 'BobTheBuildSlave'
+					password ENV.MAVEN_PUBLISH_TOKEN
+				}
+				authentication {
+					basic(BasicAuthentication)
+				}
+			}
+		}
+	}
+}
+
