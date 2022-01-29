@@ -1,5 +1,6 @@
 package io.github.pseudodistant.provider.services;
 
+import io.github.pseudodistant.provider.patch.MiniEntrypointPatch;
 import io.github.pseudodistant.provider.patch.MinicraftPatch;
 import net.fabricmc.loader.impl.FormattedException;
 import net.fabricmc.loader.impl.game.GameProvider;
@@ -34,7 +35,9 @@ public class MinicraftGameProvider implements GameProvider {
 	private boolean development = false;
 	private final List<Path> miscGameLibraries = new ArrayList<>();
 	
-	private static final GameTransformer TRANSFORMER = new GameTransformer(new MinicraftPatch());
+	private static final GameTransformer TRANSFORMER = new GameTransformer(
+			new MinicraftPatch(),
+			new MiniEntrypointPatch());
 	
 	@Override
 	public String getGameId() {
@@ -190,7 +193,6 @@ public class MinicraftGameProvider implements GameProvider {
 		catch(ReflectiveOperationException e) {
 			throw new FormattedException("Failed to start Minicraft", e);
 		}
-		
 	}
 
 	@Override

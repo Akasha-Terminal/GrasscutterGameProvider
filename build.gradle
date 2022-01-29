@@ -11,6 +11,9 @@ repositories {
 	maven {
 		url "https://maven.fabricmc.net/"
 	}
+	maven {
+		url 'https://jitpack.io'
+	}
 }
 
 sourceCompatibility = '16'
@@ -21,7 +24,7 @@ group = "io.github.pseudodistant"
 archivesBaseName = "provider"
 
 dependencies {
-
+	implementation 'com.github.skeeto:Minicraft:21e7007696'
 	compileOnly group: 'org.jetbrains', name: 'intellij-fernflower', version: '1.2.1.16'
 	compileOnly group: 'net.fabricmc', name: 'fabric-loader', version: '0.12.12'
 
