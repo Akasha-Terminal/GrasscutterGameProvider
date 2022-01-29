@@ -21,7 +21,7 @@ targetCompatibility = '16'
 
 version = providerVersion
 group = "io.github.pseudodistant"
-archivesBaseName = "provider"
+archivesBaseName = "MinicraftGameProvider"
 
 dependencies {
 	implementation 'com.github.skeeto:Minicraft:21e7007696'
