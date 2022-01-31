@@ -24,7 +24,7 @@ import java.util.zip.ZipFile;
 
 public class MinicraftGameProvider implements GameProvider {
 
-	private static final String[] ENTRYPOINTS = new String[]{"com.mojang.ld22.Game"};
+	private static final String[] ENTRYPOINTS = new String[]{"com.mojang.ld22.Game", "minicraft.core.Game"};
 	private static final HashSet<String> SENSITIVE_ARGS = new HashSet<String>(Arrays.asList(new String[] {}));
 	
 	private Arguments arguments;
@@ -33,6 +33,7 @@ public class MinicraftGameProvider implements GameProvider {
 	private Path libDir;
 	private Path gameJar;
 	private boolean development = false;
+	private boolean isPlus = false;
 	private final List<Path> miscGameLibraries = new ArrayList<>();
 	
 	private static final GameTransformer TRANSFORMER = new GameTransformer(
@@ -129,6 +130,7 @@ public class MinicraftGameProvider implements GameProvider {
 					throw new RuntimeException("Game jar configured through " + SystemProperties.GAME_JAR_PATH + " system property doesn't exist");
 				}
 				lookupPaths.add(path);
+
 				result = GameProviderHelper.findFirst(Collections.singletonList(path), zipFiles, true, ENTRYPOINTS);
 			}
 			

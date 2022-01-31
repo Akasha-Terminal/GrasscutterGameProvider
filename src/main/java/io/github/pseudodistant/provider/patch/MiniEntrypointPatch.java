@@ -20,20 +20,31 @@ public class MiniEntrypointPatch extends GamePatch {
     @Override
     public void process(FabricLauncher launcher, Function<String, ClassReader> classSource, Consumer<ClassNode> classEmitter) {
         String entrypoint = launcher.getEntrypoint();
-        if (!entrypoint.startsWith("com.mojang.")) {
+        if (!entrypoint.startsWith("com.mojang.") && !entrypoint.startsWith("minicraft.core.")) {
             return;
         }
         ClassNode mainClass = readClass(classSource.apply(entrypoint));
-        MethodNode initMethod = findMethod(mainClass, (method) -> method.name.equals("init") && method.desc.equals("()V"));
+        ClassNode plusInitializer = readClass(classSource.apply("minicraft.core.Initializer"));
+        MethodNode vanillaInitMethod = findMethod(mainClass, (method) -> method.name.equals("init") && method.desc.equals("()V"));
+        MethodNode plusInitMethod = findMethod(plusInitializer, (method) -> method.name.equals("run") && method.desc.equals("()V"));
+        MethodNode initMethod = vanillaInitMethod != null ? vanillaInitMethod : plusInitMethod;
 
         if (initMethod == null) {
             throw new RuntimeException("Could not find init method in " + entrypoint + "!");
         }
-        Log.debug(LogCategory.GAME_PATCH, "Found init method: %s -> %s", entrypoint, mainClass.name);
+        if (!(initMethod == plusInitMethod)) {
+            Log.debug(LogCategory.GAME_PATCH, "Found init method: %s -> %s", entrypoint, mainClass.name);
+        } else {
+            Log.debug(LogCategory.GAME_PATCH, "Found init method: %s -> %s", entrypoint, plusInitializer.name);
+        }
         Log.debug(LogCategory.GAME_PATCH, "Patching init method %s%s", initMethod.name, initMethod.desc);
         ListIterator<AbstractInsnNode> it = initMethod.instructions.iterator();
-        it.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MiniHooks.INTERNAL_NAME, initMethod.name, initMethod.desc, false));
-
-        classEmitter.accept(mainClass);
+        if (initMethod == vanillaInitMethod) {
+            it.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MiniHooks.INTERNAL_NAME, initMethod.name, initMethod.desc, false));
+            classEmitter.accept(mainClass);
+        } else {
+            it.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MiniHooks.INTERNAL_NAME, initMethod.name, initMethod.desc, false));
+            classEmitter.accept(plusInitializer);
+        }
     }
 }
