@@ -103,7 +103,7 @@ public class MiniEntrypointPatch extends GamePatch {
                         Object value = ldcInsnNode.cst;
                         if ((value.toString()).contains("Ver")) {
                             String version = ((String) value).replace("Version ", "");
-                            if (version.contains("-dev4")) {
+                            if (version.contains("2.0.0-dev4")) {
                                 version = version.replace("-dev4", "");
                             }
                             MinicraftGameProvider.setGameVersion(new StringVersion(version));
