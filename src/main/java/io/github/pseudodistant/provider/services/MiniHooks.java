@@ -19,13 +19,4 @@ public final class MiniHooks {
         EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
         EntrypointUtils.invoke("server", DedicatedServerModInitializer.class, DedicatedServerModInitializer::onInitializeServer);
     }
-
-    public static void run() {
-        Path runDir = Paths.get(".");
-
-        FabricLoaderImpl.INSTANCE.prepareModInit(runDir, FabricLoaderImpl.INSTANCE.getGameInstance());
-        EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
-        EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
-        EntrypointUtils.invoke("server", DedicatedServerModInitializer.class, DedicatedServerModInitializer::onInitializeServer);
-    }
 }

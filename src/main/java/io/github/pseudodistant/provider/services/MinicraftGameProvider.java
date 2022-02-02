@@ -13,7 +13,6 @@ import net.fabricmc.loader.impl.util.Arguments;
 import net.fabricmc.loader.impl.util.SystemProperties;
 import net.fabricmc.loader.impl.util.version.StringVersion;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -24,8 +23,12 @@ import java.util.zip.ZipFile;
 
 public class MinicraftGameProvider implements GameProvider {
 
-	private static final String[] ENTRYPOINTS = new String[]{"com.mojang.ld22.Game", "minicraft.core.Game"};
-	private static final HashSet<String> SENSITIVE_ARGS = new HashSet<String>(Arrays.asList(new String[] {}));
+	private static final String[] ENTRYPOINTS = new String[]{"com.mojang.ld22.Game", "minicraft.core.Game", "minicraft.Game"};
+	private static final Set<String> SENSITIVE_ARGS = new HashSet<>(Arrays.asList(
+			// all lowercase without --
+			"savedir",
+			"debug",
+			"localclient"));
 	
 	private Arguments arguments;
 	private String entrypoint;
@@ -33,8 +36,9 @@ public class MinicraftGameProvider implements GameProvider {
 	private Path libDir;
 	private Path gameJar;
 	private boolean development = false;
-	private boolean isPlus = false;
+	private static boolean isPlus = false;
 	private final List<Path> miscGameLibraries = new ArrayList<>();
+	private static StringVersion gameVersion;
 	
 	private static final GameTransformer TRANSFORMER = new GameTransformer(
 			new MinicraftPatch(),
@@ -42,12 +46,12 @@ public class MinicraftGameProvider implements GameProvider {
 	
 	@Override
 	public String getGameId() {
-		return "minicraft";
+		return isPlus ? "minicraftplus" : "minicraft";
 	}
 
 	@Override
 	public String getGameName() {
-		return "Minicraft";
+		return isPlus ? "MinicraftPlus" : "Minicraft";
 	}
 
 	@Override
@@ -64,17 +68,30 @@ public class MinicraftGameProvider implements GameProvider {
 	public Collection<BuiltinMod> getBuiltinMods() {
 		
 		HashMap<String, String> minicraftContactInformation = new HashMap<>();
-		minicraftContactInformation.put("homepage", "https://PLACEHOLDER");
-		minicraftContactInformation.put("issues", "https://discord.gg/MsQdqe52yT");
-		
+		minicraftContactInformation.put("homepage", "https://en.wikipedia.org/wiki/Minicraft");
+
+		HashMap<String, String> minicraftPlusContactInformation = new HashMap<>();
+		minicraftPlusContactInformation.put("homepage", "https://playminicraft.com/");
+		minicraftPlusContactInformation.put("wiki", "https://github.com/chrisj42/minicraft-plus-revived/wiki");
+		minicraftPlusContactInformation.put("discord", "https://discord.com/invite/nvyd3Mrj");
+		minicraftPlusContactInformation.put("issues", "https://github.com/MinicraftPlus/minicraft-plus-revived/issues");
+
 		BuiltinModMetadata.Builder minicraftMetaData =
 				new BuiltinModMetadata.Builder(getGameId(), getNormalizedGameVersion())
 				.setName(getGameName())
 				.addAuthor("Notch", minicraftContactInformation)
 				.setContact(new ContactInformationImpl(minicraftContactInformation))
 				.setDescription("A 2D top-down action game designed and programmed by Markus Persson, the creator of Minecraft, for a Ludum Dare, a 48-hour game programming competition.");
-		
-		return Collections.singletonList(new BuiltinMod(gameJar, minicraftMetaData.build()));
+
+		BuiltinModMetadata.Builder minicraftPlusMetaData =
+				new BuiltinModMetadata.Builder(getGameId(), getNormalizedGameVersion())
+				.setName(getGameName())
+				.addAuthor("Minicraft+ Contributors", minicraftPlusContactInformation)
+				.setContact(new ContactInformationImpl(minicraftPlusContactInformation))
+				.setDescription("Minicraft+ is a modded version of Minicraft that adds many more features to the original version. The original Minicraft game was made by Markus 'Notch' Persson in the Ludum Dare 22 contest.");
+
+
+		return isPlus ? Collections.singletonList(new BuiltinMod(gameJar, minicraftPlusMetaData.build())) : Collections.singletonList(new BuiltinMod(gameJar, minicraftMetaData.build()));
 	}
 
 	@Override
@@ -112,9 +129,8 @@ public class MinicraftGameProvider implements GameProvider {
 		arguments.parse(args);
 		
 		Map<Path, ZipFile> zipFiles = new HashMap<>();
-		List<Path> lookupPaths = new ArrayList<>();
 		
-		if(System.getProperty(SystemProperties.DEVELOPMENT) == "true") {
+		if(Objects.equals(System.getProperty(SystemProperties.DEVELOPMENT), "true")) {
 			development = true;
 		}
 		
@@ -129,7 +145,6 @@ public class MinicraftGameProvider implements GameProvider {
 				if (!Files.exists(path)) {
 					throw new RuntimeException("Game jar configured through " + SystemProperties.GAME_JAR_PATH + " system property doesn't exist");
 				}
-				lookupPaths.add(path);
 
 				result = GameProviderHelper.findFirst(Collections.singletonList(path), zipFiles, true, ENTRYPOINTS);
 			}
@@ -140,17 +155,9 @@ public class MinicraftGameProvider implements GameProvider {
 			
 			entrypoint = result.name;
 			gameJar = result.path;
-			
-		}
-		finally {
-			for(ZipFile f : zipFiles.values()) {
-				try {
-					f.close();
-				}
-				catch(IOException e) {
-					//ignore
-				}
-			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
 		processArgumentMap(arguments);
@@ -241,9 +248,23 @@ public class MinicraftGameProvider implements GameProvider {
 	private static Path getLaunchDirectory(Arguments arguments) {
 		return Paths.get(arguments.getOrDefault("gameDir", "."));
 	}
-	
+
+	public static void setGameVersion(StringVersion version) {
+		if (version != null) {
+			gameVersion = version;
+		}
+	}
+
+	public static void setIsPlus() {
+		isPlus = true;
+	}
+
 	private StringVersion getGameVersion() {
-		return new StringVersion("1.0.0");
+		if (gameVersion != null) {
+			return gameVersion;
+		} else {
+			return new StringVersion("1.0.0");
+		}
 	}
 
 }
