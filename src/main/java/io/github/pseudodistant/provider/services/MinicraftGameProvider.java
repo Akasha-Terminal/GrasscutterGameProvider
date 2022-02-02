@@ -161,9 +161,15 @@ public class MinicraftGameProvider implements GameProvider {
 		}
 		
 		processArgumentMap(arguments);
-		
-		//locateFilesystemDependencies();
-		
+
+		try {
+			String Md5 = GetMD5FromJar.getMD5Checksum(gameJar.toString());
+			gameVersion = GetVersionFromHash.getVersionFromHash(Md5);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+
 		return true;
 		
 	}
