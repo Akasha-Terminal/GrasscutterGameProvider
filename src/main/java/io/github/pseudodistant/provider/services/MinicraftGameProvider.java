@@ -90,8 +90,7 @@ public class MinicraftGameProvider implements GameProvider {
 				.setContact(new ContactInformationImpl(minicraftPlusContactInformation))
 				.setDescription("Minicraft+ is a modded version of Minicraft that adds many more features to the original version. The original Minicraft game was made by Markus 'Notch' Persson in the Ludum Dare 22 contest.");
 
-
-		return isPlus ? Collections.singletonList(new BuiltinMod(gameJar, minicraftPlusMetaData.build())) : Collections.singletonList(new BuiltinMod(gameJar, minicraftMetaData.build()));
+		return isPlus ? Collections.singletonList(new BuiltinMod(Collections.singletonList(gameJar), minicraftPlusMetaData.build())) : Collections.singletonList(new BuiltinMod(Collections.singletonList(gameJar), minicraftMetaData.build()));
 	}
 
 	@Override
