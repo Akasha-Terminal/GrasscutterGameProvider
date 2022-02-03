@@ -1,7 +1,6 @@
 package io.github.pseudodistant.provider.services;
 
-import io.github.pseudodistant.provider.patch.MiniEntrypointPatch;
-import io.github.pseudodistant.provider.patch.MinicraftPatch;
+import io.github.pseudodistant.provider.patch.ExampleEntrypointPatch;
 import net.fabricmc.loader.impl.FormattedException;
 import net.fabricmc.loader.impl.game.GameProvider;
 import net.fabricmc.loader.impl.game.GameProviderHelper;
@@ -21,14 +20,19 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.zip.ZipFile;
 
-public class MinicraftGameProvider implements GameProvider {
+public class ExampleGameProvider implements GameProvider {
 
-	private static final String[] ENTRYPOINTS = new String[]{"com.mojang.ld22.Game", "minicraft.core.Game", "minicraft.Game"};
+	/* Define our entrypoint classes, we will be using these to allow ModInitializer to work, as well as to start the game.
+	 * (At least one of these should have the main method, so that the game can start.)
+	 */
+	private static final String[] ENTRYPOINTS = new String[]{"com.mojang.mario.FullScreenFrameLauncher"};
+	// Set our game's arguments (This variable isn't necessary, but makes the process a lot easier).
 	private static final Set<String> SENSITIVE_ARGS = new HashSet<>(Arrays.asList(
-			// all lowercase without --
-			"savedir",
-			"debug",
-			"localclient"));
+			// List of all of our arguments, all lowercase, and without --
+			"list",
+			"of",
+			"game",
+			"arguments"));
 	
 	private Arguments arguments;
 	private String entrypoint;
@@ -36,78 +40,79 @@ public class MinicraftGameProvider implements GameProvider {
 	private Path libDir;
 	private Path gameJar;
 	private boolean development = false;
-	private static boolean isPlus = false;
 	private final List<Path> miscGameLibraries = new ArrayList<>();
-	private static StringVersion gameVersion;
-	
+	private static final StringVersion gameVersion = new StringVersion("1.0.0");
+
+	// Apply our patches, for the sake of incorporating ModInitializer hooks, or to patch branding.
 	private static final GameTransformer TRANSFORMER = new GameTransformer(
-			new MinicraftPatch(),
-			new MiniEntrypointPatch());
+			new ExampleEntrypointPatch());
 	
 	@Override
+	// Fabric GameProvider method for setting the modid for the game (For Minecraft, this is `minecraft`).
 	public String getGameId() {
-		return isPlus ? "minicraftplus" : "minicraft";
+		return "example-game";
 	}
 
 	@Override
+	// Fabric GameProvider method for setting the pretty name for the game (The ones that ModMenu likes to use).
 	public String getGameName() {
-		return isPlus ? "MinicraftPlus" : "Minicraft";
+		return "Example Game";
 	}
 
 	@Override
+	// Set the version string of the game, simple as that.
 	public String getRawGameVersion() {
-		return getGameVersion().getFriendlyString();
+		return gameVersion.getFriendlyString();
 	}
 
 	@Override
+	// Set a SemVer-compliant string so that mods can see if they're compatible with the version being loaded.
 	public String getNormalizedGameVersion() {
 		return getRawGameVersion();
 	}
 
 	@Override
+	/* This is where we actually set the game's metadata, including the modid, the version, the author, and any
+	 * other relevant metadata to the game.
+	 */
 	public Collection<BuiltinMod> getBuiltinMods() {
-		
-		HashMap<String, String> minicraftContactInformation = new HashMap<>();
-		minicraftContactInformation.put("homepage", "https://en.wikipedia.org/wiki/Minicraft");
+		HashMap<String, String> exampleContactInformation = new HashMap<>();
+		exampleContactInformation.put("homepage", "https://insert.website.here/");
+		exampleContactInformation.put("wiki", "https://insert.website.here/wiki/");
+		exampleContactInformation.put("issues", "idk some issue link");
 
-		HashMap<String, String> minicraftPlusContactInformation = new HashMap<>();
-		minicraftPlusContactInformation.put("homepage", "https://playminicraft.com/");
-		minicraftPlusContactInformation.put("wiki", "https://github.com/chrisj42/minicraft-plus-revived/wiki");
-		minicraftPlusContactInformation.put("discord", "https://discord.com/invite/nvyd3Mrj");
-		minicraftPlusContactInformation.put("issues", "https://github.com/MinicraftPlus/minicraft-plus-revived/issues");
-
-		BuiltinModMetadata.Builder minicraftMetaData =
+		BuiltinModMetadata.Builder exampleMetadata =
 				new BuiltinModMetadata.Builder(getGameId(), getNormalizedGameVersion())
 				.setName(getGameName())
-				.addAuthor("Notch", minicraftContactInformation)
-				.setContact(new ContactInformationImpl(minicraftContactInformation))
-				.setDescription("A 2D top-down action game designed and programmed by Markus Persson, the creator of Minecraft, for a Ludum Dare, a 48-hour game programming competition.");
+				.addAuthor("ExampleAuthor", exampleContactInformation)
+				.setContact(new ContactInformationImpl(exampleContactInformation))
+				.setDescription("A very brief, yet informative, description of the game.");
 
-		BuiltinModMetadata.Builder minicraftPlusMetaData =
-				new BuiltinModMetadata.Builder(getGameId(), getNormalizedGameVersion())
-				.setName(getGameName())
-				.addAuthor("Minicraft+ Contributors", minicraftPlusContactInformation)
-				.setContact(new ContactInformationImpl(minicraftPlusContactInformation))
-				.setDescription("Minicraft+ is a modded version of Minicraft that adds many more features to the original version. The original Minicraft game was made by Markus 'Notch' Persson in the Ludum Dare 22 contest.");
 
-		return isPlus ? Collections.singletonList(new BuiltinMod(Collections.singletonList(gameJar), minicraftPlusMetaData.build())) : Collections.singletonList(new BuiltinMod(Collections.singletonList(gameJar), minicraftMetaData.build()));
+		return Collections.singletonList(new BuiltinMod(Collections.singletonList(gameJar), exampleMetadata.build()));
 	}
 
 	@Override
+	// Getter for entrypoint.
 	public String getEntrypoint() {
 		return entrypoint;
 	}
 
 	@Override
+	/* Get the game's launch directory. This is especially useful if the game has a launcher that
+	 * launches it from a specific directory, like Minecraft.
+	 * For any game that's run with a `java -jar` command, we can usually just set it to the current working
+	 * directory, which can be called with "."
+	 */
 	public Path getLaunchDirectory() {
 		if (arguments == null) {
 			return Paths.get(".");
 		}
-		
 		return getLaunchDirectory(arguments);
 	}
 
 	@Override
+	// Is the game obfuscated, as in does it need an intermediary?
 	public boolean isObfuscated() {
 		return false;
 	}
@@ -123,6 +128,10 @@ public class MinicraftGameProvider implements GameProvider {
 	}
 
 	@Override
+	/* Where is the game's Jar file?
+	 * This is needed because instead of launching the game, you're actually launching Fabric (Knot, specifically).
+	 * Fabric needs to know where the game is so Fabric can actually start it.
+	 */
 	public boolean locateGame(FabricLauncher launcher, String[] args) {
 		this.arguments = new Arguments();
 		arguments.parse(args);
@@ -137,7 +146,7 @@ public class MinicraftGameProvider implements GameProvider {
 			String gameJarProperty = System.getProperty(SystemProperties.GAME_JAR_PATH);
 			GameProviderHelper.FindResult result = null;
 			if(gameJarProperty == null) {
-				gameJarProperty = "./jars/minicraft.jar";
+				gameJarProperty = "./game.jar";
 			}
 			if(gameJarProperty != null) {
 				Path path = Paths.get(gameJarProperty);
@@ -161,14 +170,6 @@ public class MinicraftGameProvider implements GameProvider {
 		
 		processArgumentMap(arguments);
 
-		try {
-			String Md5 = GetMD5FromJar.getMD5Checksum(gameJar.toString());
-			gameVersion = GetVersionFromHash.getVersionFromHash(Md5);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-
 		return true;
 		
 	}
@@ -184,6 +185,7 @@ public class MinicraftGameProvider implements GameProvider {
 	}
 
 	@Override
+	// Add the game to the classpath, as well as any of the game's dependencies.
 	public void unlockClassPath(FabricLauncher launcher) {
 		launcher.addToClassPath(gameJar);
 		
@@ -193,6 +195,7 @@ public class MinicraftGameProvider implements GameProvider {
 	}
 
 	@Override
+	// Start the game using Fabric Loader.
 	public void launch(ClassLoader loader) {
 		String targetClass = entrypoint;
 		
@@ -202,19 +205,24 @@ public class MinicraftGameProvider implements GameProvider {
 			m.invoke(null, (Object) arguments.toArray());
 		}
 		catch(InvocationTargetException e) {
-			throw new FormattedException("Minicraft has crashed!", e.getCause());
+			throw new FormattedException("The game has crashed!", e.getCause());
 		}
 		catch(ReflectiveOperationException e) {
-			throw new FormattedException("Failed to start Minicraft", e);
+			throw new FormattedException("Failed to start the game", e);
 		}
 	}
 
 	@Override
+	// Getter for arguments.
 	public Arguments getArguments() {
 		return arguments;
 	}
 
 	@Override
+	/* Gets the arguments being passed to Fabric Loader, so for
+	 * ... net.fabricmc.loader.launch.knot.KnotClient --debug true
+	 * the state of --debug can be called from here.
+	 */
 	public String[] getLaunchArguments(boolean sanitize) {
 		if (arguments == null) return new String[0];
 
@@ -249,27 +257,8 @@ public class MinicraftGameProvider implements GameProvider {
 		System.out.println("Launch directory is " + launchDir);
 		libDir = launchDir.resolve(Path.of("./lib"));
 	}
-	
+
 	private static Path getLaunchDirectory(Arguments arguments) {
 		return Paths.get(arguments.getOrDefault("gameDir", "."));
 	}
-
-	public static void setGameVersion(StringVersion version) {
-		if (version != null) {
-			gameVersion = version;
-		}
-	}
-
-	public static void setIsPlus() {
-		isPlus = true;
-	}
-
-	private StringVersion getGameVersion() {
-		if (gameVersion != null) {
-			return gameVersion;
-		} else {
-			return new StringVersion("1.0.0");
-		}
-	}
-
 }

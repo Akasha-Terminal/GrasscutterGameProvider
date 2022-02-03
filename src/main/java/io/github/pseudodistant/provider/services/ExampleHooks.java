@@ -9,8 +9,12 @@ import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class MiniHooks {
-    public static final String INTERNAL_NAME = MiniHooks.class.getName().replace('.', '/');
+public final class ExampleHooks {
+    public static final String INTERNAL_NAME = ExampleHooks.class.getName().replace('.', '/');
+    /** This hook runs Fabric's ModInitializer.onInitialize() from where it is called.
+     *  It's recommended that you call them from as late into the game's execution as you can while still being before the game loop,
+     *  to allow ModInitializer to allow as many game alterations as possible.
+     */
     public static void init() {
         Path runDir = Paths.get(".");
 
