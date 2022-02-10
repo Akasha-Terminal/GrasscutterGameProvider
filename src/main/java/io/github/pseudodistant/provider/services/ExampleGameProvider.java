@@ -102,7 +102,7 @@ public class ExampleGameProvider implements GameProvider {
 	/* Get the game's launch directory. This is especially useful if the game has a launcher that
 	 * launches it from a specific directory, like Minecraft.
 	 * For any game that's run with a `java -jar` command, we can usually just set it to the current working
-	 * directory, which can be called with "."
+	 * directory, which can be called with "." or just a filename like "game.jar"
 	 */
 	public Path getLaunchDirectory() {
 		if (arguments == null) {

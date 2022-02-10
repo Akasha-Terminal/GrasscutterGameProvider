@@ -2,6 +2,7 @@ package io.github.pseudodistant.provider.services;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.DedicatedServerModInitializer;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
@@ -20,7 +21,10 @@ public final class ExampleHooks {
 
         FabricLoaderImpl.INSTANCE.prepareModInit(runDir, FabricLoaderImpl.INSTANCE.getGameInstance());
         EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
-        EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
-        EntrypointUtils.invoke("server", DedicatedServerModInitializer.class, DedicatedServerModInitializer::onInitializeServer);
+        if (FabricLoaderImpl.INSTANCE.getEnvironmentType() == EnvType.CLIENT) {
+            EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
+        } else {
+            EntrypointUtils.invoke("server", DedicatedServerModInitializer.class, DedicatedServerModInitializer::onInitializeServer);
+        }
     }
 }
