@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'me.cael'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+    maven {
+        url "https://repo.4benj.com/releases"
+    }
+
+}
+
+dependencies {
+	implementation "xyz.grasscutters:grasscutter:${project.grasscutter_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation 'org.jetbrains:annotations:22.0.0'
+    implementation "net.fabricmc:sponge-mixin:0.11.0+mixin.0.8.5"
+    implementation "net.fabricmc:access-widener:2.1.0"
+}

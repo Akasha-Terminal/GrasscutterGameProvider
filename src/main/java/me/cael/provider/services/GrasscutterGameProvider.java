@@ -1,6 +1,6 @@
-package io.github.pseudodistant.provider.services;
+package me.cael.provider.services;
 
-import io.github.pseudodistant.provider.patch.ExampleEntrypointPatch;
+import me.cael.provider.patch.GrasscutterEntrypointPatch;
 import net.fabricmc.loader.impl.FormattedException;
 import net.fabricmc.loader.impl.game.GameProvider;
 import net.fabricmc.loader.impl.game.GameProviderHelper;
@@ -20,19 +20,16 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.zip.ZipFile;
 
-public class ExampleGameProvider implements GameProvider {
+public class GrasscutterGameProvider implements GameProvider {
 
 	/* Define our entrypoint classes, we will be using these to allow ModInitializer to work, as well as to start the game.
 	 * (At least one of these should have the main method, so that the game can start.)
 	 */
-	private static final String[] ENTRYPOINTS = new String[]{"com.mojang.mario.FullScreenFrameLauncher"};
+	private static final String[] ENTRYPOINTS = new String[]{"emu.grasscutter.Grasscutter"};
 	// Set our game's arguments (This variable isn't necessary, but makes the process a lot easier).
-	private static final Set<String> SENSITIVE_ARGS = new HashSet<>(Arrays.asList(
-			// List of all of our arguments, all lowercase, and without --
-			"list",
-			"of",
-			"game",
-			"arguments"));
+	private static final Set<String> SENSITIVE_ARGS = new HashSet<>(List.of(
+			// List of all of our arguments, all lowercase, and without -
+			"handbook"));
 	
 	private Arguments arguments;
 	private String entrypoint;
@@ -41,22 +38,22 @@ public class ExampleGameProvider implements GameProvider {
 	private Path gameJar;
 	private boolean development = false;
 	private final List<Path> miscGameLibraries = new ArrayList<>();
-	private static final StringVersion gameVersion = new StringVersion("1.0.0");
+	private static final StringVersion gameVersion = new StringVersion("1.3.0");
 
 	// Apply our patches, for the sake of incorporating ModInitializer hooks, or to patch branding.
 	private static final GameTransformer TRANSFORMER = new GameTransformer(
-			new ExampleEntrypointPatch());
+			new GrasscutterEntrypointPatch());
 	
 	@Override
 	// Fabric GameProvider method for setting the modid for the game (For Minecraft, this is `minecraft`).
 	public String getGameId() {
-		return "example-game";
+		return "grasscutter";
 	}
 
 	@Override
 	// Fabric GameProvider method for setting the pretty name for the game (The ones that ModMenu likes to use).
 	public String getGameName() {
-		return "Example Game";
+		return "Grasscutter";
 	}
 
 	@Override
@@ -76,20 +73,21 @@ public class ExampleGameProvider implements GameProvider {
 	 * other relevant metadata to the game.
 	 */
 	public Collection<BuiltinMod> getBuiltinMods() {
-		HashMap<String, String> exampleContactInformation = new HashMap<>();
-		exampleContactInformation.put("homepage", "https://insert.website.here/");
-		exampleContactInformation.put("wiki", "https://insert.website.here/wiki/");
-		exampleContactInformation.put("issues", "idk some issue link");
+		HashMap<String, String> grasscutterContactInformation = new HashMap<>();
+		grasscutterContactInformation.put("homepage", "https://grasscutter.io/");
+		grasscutterContactInformation.put("wiki", "https://github.com/Grasscutters/Grasscutter/wiki");
+		grasscutterContactInformation.put("issues", "https://github.com/Grasscutters/Grasscutter/issues");
+		grasscutterContactInformation.put("discord", "https://discord.gg/T5vZU6UyeG");
 
-		BuiltinModMetadata.Builder exampleMetadata =
+		BuiltinModMetadata.Builder grasscutterMetadata =
 				new BuiltinModMetadata.Builder(getGameId(), getNormalizedGameVersion())
 				.setName(getGameName())
-				.addAuthor("ExampleAuthor", exampleContactInformation)
-				.setContact(new ContactInformationImpl(exampleContactInformation))
-				.setDescription("A very brief, yet informative, description of the game.");
+				.addAuthor("Grasscutters", grasscutterContactInformation)
+				.setContact(new ContactInformationImpl(grasscutterContactInformation))
+				.setDescription("A server software reimplementation for a certain anime game.");
 
 
-		return Collections.singletonList(new BuiltinMod(Collections.singletonList(gameJar), exampleMetadata.build()));
+		return Collections.singletonList(new BuiltinMod(Collections.singletonList(gameJar), grasscutterMetadata.build()));
 	}
 
 	@Override
@@ -146,7 +144,7 @@ public class ExampleGameProvider implements GameProvider {
 			String gameJarProperty = System.getProperty(SystemProperties.GAME_JAR_PATH);
 			GameProviderHelper.FindResult result = null;
 			if(gameJarProperty == null) {
-				gameJarProperty = "./game.jar";
+				gameJarProperty = "./grasscutter.jar";
 			}
 			if(gameJarProperty != null) {
 				Path path = Paths.get(gameJarProperty);
@@ -235,8 +233,8 @@ public class ExampleGameProvider implements GameProvider {
 			String arg = ret[i];
 
 			if (i + 1 < ret.length
-					&& arg.startsWith("--")
-					&& SENSITIVE_ARGS.contains(arg.substring(2).toLowerCase(Locale.ENGLISH))) {
+					&& arg.startsWith("-")
+					&& SENSITIVE_ARGS.contains(arg.substring(1).toLowerCase(Locale.ENGLISH))) {
 				i++; // skip value
 			} else {
 				ret[writeIdx++] = arg;

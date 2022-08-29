@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.cael.pluginfix.mixin",
+  "server": [
+    "PluginManagerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

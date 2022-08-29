@@ -1,6 +1,6 @@
-package io.github.pseudodistant.provider.patch;
+package me.cael.provider.patch;
 
-import io.github.pseudodistant.provider.services.ExampleHooks;
+import me.cael.provider.services.GrasscutterHooks;
 import net.fabricmc.loader.impl.game.patch.GamePatch;
 import net.fabricmc.loader.impl.launch.FabricLauncher;
 import net.fabricmc.loader.impl.util.log.Log;
@@ -13,7 +13,7 @@ import java.util.ListIterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class ExampleEntrypointPatch extends GamePatch {
+public class GrasscutterEntrypointPatch extends GamePatch {
     @Override
     public void process(FabricLauncher launcher, Function<String, ClassReader> classSource, Consumer<ClassNode> classEmitter) {
         // Get the game's entrypoint (set in the GameProvider) from FabricLauncher
@@ -23,7 +23,7 @@ public class ExampleEntrypointPatch extends GamePatch {
          * (Usually for client/server differences and the like, but I like to see this as being abusable
          * and allowing one provider to load multiple games.)
          */
-        if (!entrypoint.startsWith("com.mojang.")) {
+        if (!entrypoint.startsWith("emu.grasscutter.")) {
             return;
         }
 
@@ -46,7 +46,7 @@ public class ExampleEntrypointPatch extends GamePatch {
         // Assign the variable `it` to the list of instructions for our initializer method.
         ListIterator<AbstractInsnNode> it = initMethod.instructions.iterator();
         // Add our hooks to the initializer method.
-        it.add(new MethodInsnNode(Opcodes.INVOKESTATIC, ExampleHooks.INTERNAL_NAME, "init", "()V", false));
+        it.add(new MethodInsnNode(Opcodes.INVOKESTATIC, GrasscutterHooks.INTERNAL_NAME, "init", "()V", false));
         // And finally, apply our changes to the class.
         classEmitter.accept(mainClass);
     }
